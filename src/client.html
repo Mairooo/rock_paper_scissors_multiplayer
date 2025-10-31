@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Pierre Papier Ciseau</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-header">
+            <h1>PIERRE PAPIER CISEAUX</h1>
+            <p class="subtitle">lézard spock extension</p>
+            <p class="question">Quel mode de jeu souhaitez-vous faire ?</p>
+        </div>
+        
+        <div class="welcome-content">
+            <div class="mode-selection-grid">
+                <div class="mode-card" onclick="choisirMode('ai')">
+                    <div class="mode-icon">🤖</div>
+                    <h3>Contre un ordinateur</h3>
+                    <p>Affrontez notre IA intelligente</p>
+                </div>
+                
+                <div class="mode-card" onclick="choisirMode('multiplayer')">
+                    <div class="mode-icon">👥</div>
+                    <h3>En multijoueur</h3>
+                    <p>Défiez un autre joueur en ligne</p>
+                </div>
+            </div>
+            
+            <div class="rules-section">
+                <h3>Les règles du jeu</h3>
+                <div class="rules-content">
+                    <ul class="rules-list">
+                        <li>Pierre écrase Ciseaux et Lézard</li>
+                        <li>Papier recouvre Pierre et réfute Spock</li>
+                        <li>Ciseaux coupent Papier et décapitent Lézard</li>
+                        <li>Lézard mange Papier et empoisonne Spock</li>
+                        <li>Spock vaporise Pierre et casse Ciseaux</li>
+                    </ul>
+                    <p class="rules-note">Premier à 10 points avec 2 points d'écart gagne !</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-screen" id="gameScreen">
+        <div class="game-header">
+            <div class="game-title">
+                <h1>PIERRE PAPIER CISEAUX</h1>
+                <p class="subtitle">lézard spock extension</p>
+            </div>
+            <button class="back-btn" onclick="retourMenu()">Retour au menu</button>
+        </div>
+        
+        <div class="game-layout">
+            <div class="choices-sidebar">
+                <h3>Faites votre choix</h3>
+                <div class="choices-list">
+                    <button class="choice-btn" onclick="envoiReponse('pierre')">
+                        <img src="images/pierre.jpg" class="choice-img" alt="Pierre">
+                        <span class="choice-label">Pierre</span>
+                    </button>
+                    <button class="choice-btn" onclick="envoiReponse('papier')">
+                        <img src="images/papier.jpg" class="choice-img" alt="Papier">
+                        <span class="choice-label">Papier</span>
+                    </button>
+                    <button class="choice-btn" onclick="envoiReponse('ciseau')">
+                        <img src="images/ciseaux.png" class="choice-img" alt="Ciseau">
+                        <span class="choice-label">Ciseau</span>
+                    </button>
+                    <button class="choice-btn" onclick="envoiReponse('lezard')">
+                        <img src="images/lézard.jpg" class="choice-img" alt="Lézard">
+                        <span class="choice-label">Lézard</span>
+                    </button>
+                    <button class="choice-btn" onclick="envoiReponse('spock')">
+                        <img src="images/spock.png" class="choice-img" alt="Spock">
+                        <span class="choice-label">Spock</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Zone de jeu principale -->
+            <div class="game-main">
+                <div class="game-mode-info" id="gameModeInfo"></div>
+                
+                <div class="last-choices">
+                    <div class="last-choice-block">
+                        <div class="choice-display">
+                            <img id="imgChoix1" src="/placeholder.svg" class="choice-display-img" alt="">
+                        </div>
+                        <span>Votre dernier choix</span>
+                    </div>
+                    <div class="last-choice-block">
+                        <div class="choice-display">
+                            <img id="imgChoix2" src="/placeholder.svg" class="choice-display-img" alt="">
+                        </div>
+                        <span id="adversaireLabel">Choix de l'adversaire</span>
+                    </div>
+                </div>
+                
+                <div class="game-status">
+                    <div class="status" id="zone_texte_final">En attente...</div>
+                    <div class="status" id="zone_texte_statut"></div>
+                    <div class="endgame" id="finDePartie"></div>
+                </div>
+                
+                <div class="scoreboard-container">
+                    <div class="scoreboard" id="scoreClient1">Votre score : 0</div>
+                    <div class="scoreboard" id="scoreClient2">Score adversaire : 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var sockVersServeur = io.connect('http://localhost:8080');
+        var monDernierChoix = '';
+        var dernierChoixAdversaire = '';
+        var modeActuel = '';
+
+        function choisirMode(mode) {
+            modeActuel = mode;
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            if (mode === 'ai') {
+                document.getElementById('gameModeInfo').textContent = '';
+                document.getElementById('adversaireLabel').textContent = 'Choix de l\'ordinateur';
+                document.getElementById('scoreClient2').textContent = 'Score ordinateur : 0';
+            } else {
+                document.getElementById('gameModeInfo').textContent = '';
+                document.getElementById('adversaireLabel').textContent = 'Choix de l\'adversaire';
+                document.getElementById('scoreClient2').textContent = 'Score adversaire : 0';
+            }
+            
+            sockVersServeur.emit('choisirMode', mode);
+        }
+
+        function retourMenu() {
+            document.getElementById('welcomeScreen').style.display = 'block';
+            document.getElementById('gameScreen').style.display = 'none';
+            
+            document.getElementById('zone_texte_final').innerHTML = 'En attente...';
+            document.getElementById('zone_texte_statut').innerHTML = '';
+            document.getElementById('scoreClient1').innerHTML = 'Votre score : 0';
+            document.getElementById('scoreClient2').innerHTML = 'Score adversaire : 0';
+            document.getElementById('finDePartie').innerHTML = '';
+            monDernierChoix = '';
+            dernierChoixAdversaire = '';
+            updateLastChoices();
+        }
+
+        function updateLastChoices() {
+            const mapToImg = {
+                pierre: 'images/pierre.jpg',
+                papier: 'images/papier.jpg',
+                ciseau: 'images/ciseaux.png',
+                lezard: 'images/lézard.jpg',
+                spock: 'images/spock.png'
+            };
+            
+            const img1 = document.getElementById('imgChoix1');
+            const img2 = document.getElementById('imgChoix2');
+            
+            if (monDernierChoix) {
+                img1.src = mapToImg[monDernierChoix];
+                img1.style.opacity = 1;
+                img1.style.display = 'block';
+            } else {
+                img1.style.opacity = 0.3;
+                img1.style.display = 'none';
+            }
+            
+            if (dernierChoixAdversaire) {
+                img2.src = mapToImg[dernierChoixAdversaire];
+                img2.style.opacity = 1;
+                img2.style.display = 'block';
+            } else {
+                img2.style.opacity = 0.3;
+                img2.style.display = 'none';
+            }
+        }
+
+        sockVersServeur.on('message', function (message) {
+            document.getElementById("zone_texte_statut").innerHTML = message;
+        });
+
+        sockVersServeur.on('texteFinal', function (message) {
+            document.getElementById("zone_texte_final").innerHTML = "L'autre joueur a choisi : " + message;
+        });
+
+        sockVersServeur.on('statut', function (message) {
+            document.getElementById("zone_texte_statut").innerHTML = message;
+        });
+
+        sockVersServeur.on('score', function (scores) {
+            if (modeActuel === 'ai') {
+                document.getElementById("scoreClient1").innerHTML = "Votre score : " + scores.scoreClient1;
+                document.getElementById("scoreClient2").innerHTML = "Score ordinateur : " + scores.scoreClient2;
+            } else {
+                document.getElementById("scoreClient1").innerHTML = "Votre score : " + scores.scoreClient1;
+                document.getElementById("scoreClient2").innerHTML = "Score adversaire : " + scores.scoreClient2;
+            }
+        });
+
+        sockVersServeur.on('finDePartie', function (message) {
+            document.getElementById("finDePartie").innerHTML = message;
+        });
+
+        sockVersServeur.on('lastChoices', function (data) {
+            monDernierChoix = data.votreChoix;
+            dernierChoixAdversaire = data.choixAdversaire;
+            updateLastChoices();
+        });
+
+        sockVersServeur.on('prochaineManche', function() {
+            document.getElementById("zone_texte_statut").innerHTML = "Prochaine manche !";
+            setTimeout(() => {
+                monDernierChoix = '';
+                dernierChoixAdversaire = '';
+                updateLastChoices();
+            }, 2000);
+        });
+
+        function envoiReponse(rep) {
+            monDernierChoix = rep;
+            updateLastChoices();
+            sockVersServeur.emit('reponseDuClient', rep);
+            
+            if (modeActuel === 'ai') {
+                document.getElementById("zone_texte_statut").innerHTML = "L'ordinateur réfléchit...";
+            } else {
+                document.getElementById("zone_texte_statut").innerHTML = "En attente de l'autre joueur...";
+            }
+        }
+
+        updateLastChoices();
+    </script>
+</body>
+</html>
