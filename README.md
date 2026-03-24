@@ -66,7 +66,3 @@ Pour le mode multijoueur, ouvrez un second onglet ou demandez à un autre joueur
 - **Node.js** — Serveur HTTP
 - **Socket.IO** — Communication bidirectionnelle en temps réel
 - **Vanilla JS / HTML / CSS** — Interface côté client
-
-## Licence
-
-Ce projet est open source et disponible sous la [licence MIT](LICENSE).
